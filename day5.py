@@ -8,7 +8,7 @@ def get_program(file):
 #     program[2] = verb
 #     pc = 0
 #     opcode = program[0]
-# 
+#
 #     while opcode != 99:
 #         opcode = int(str(program[0])[-2:])
 #
@@ -57,22 +57,27 @@ def get_program(file):
 # print(part_two(19690720))
 
 program = get_program('day5input.txt')
-# program = [3,0,4,0,99]
 pc = 0
 code = program[0]
 
-def get_oplist(code, program):
-    oplist = list(str(code))[::-1]
-    for i, v in enumerate(oplist):
-        oplist[i] = int(v)
+def get_oplist(code):
+    op = list(str(code))[::-1]
     #remove leading 0 from opcode (eg, 02)
-    oplist.remove(oplist[1])
-    while len(oplist) < len(program):
-        oplist.append(0)
-    return oplist
+    op.remove(op[1])
+    for i, v in enumerate(op):
+        op[i] = int(v)
+    if op[0] in [1,2] and len(op) < 4:
+        return check_oplist_len(op, 4)
+    elif op[0] in [3,4] and len(op) < 2:
+        return check_oplist_len(op,2)
+    else:
+        return op
 
-def get_mode(oplist, pc):
-    return oplist[pc]
+def check_oplist_len(oplist, n):
+    x = n-len(oplist)
+    z = [0] * x
+    final = oplist + z
+    return final
 
 def pos_or_imm(program, mode, pc):
     if mode == 0:
@@ -80,9 +85,9 @@ def pos_or_imm(program, mode, pc):
     elif mode == 1:
         return program[pc]
 
-def get_value(program, oplist, pc):
+def get_value(program, oplist, pc, pos):
     if len(oplist) > 0:
-        mode = get_mode(oplist, pc)
+        mode = oplist[pos]
     else:
         mode = 0
     value = pos_or_imm(program, mode, pc)
@@ -91,12 +96,9 @@ def get_value(program, oplist, pc):
 while pc < len(program):
 
     code = program[pc]
-    while code not in [1, 2, 3, 4, 99]:
-        pc+=1
-        code = program[pc]
 
     if len(str(code)) > 1:
-        oplist = get_oplist(code, program)
+        oplist = get_oplist(code)
         opcode = oplist[0]
 
     else:
@@ -104,20 +106,20 @@ while pc < len(program):
         opcode = code
 
     if opcode == 1 or opcode == 2:
-        op1 = get_value(program, oplist, pc+1)
-        op2 = get_value(program, oplist, pc+2)
+        op1 = get_value(program, oplist, pc+1, 1)
+        op2 = get_value(program, oplist, pc+2, 2)
         dest = program[pc + 3]
         program[dest] = op1 + op2 if opcode == 1 else op1 * op2
-        pc += 1
+        pc += 4
     elif opcode == 3:
         op1 = int(input('input: '))
-        pc += 1
-        dest = program[pc]
+        dest = program[pc+1]
         program[dest] = op1
+        pc +=2
     elif opcode == 4:
-        pc += 1
-        dest = program[pc]
+        dest = program[pc+1]
         print(program[dest])
+        pc +=2
     elif opcode == 99:
         break
     else:
